@@ -1,0 +1,14 @@
+*.pyc
+*_pb2.py
+*.egg-info
+
+__pycache__
+
+env/*
+lib/*
+share/*
+bin/*
+dist/*
+Include/*
+Lib/*
+Scripts/*
