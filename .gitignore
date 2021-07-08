@@ -9,7 +9,7 @@ lib/*
 share/*
 bin/*
 dist/*
+build/*
 Include/*
 Lib/*
 Scripts/*
-build/*
