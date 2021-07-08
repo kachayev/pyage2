@@ -56,8 +56,6 @@ setup(
     entry_points = {
         'console_scripts': [
             'pyage2_play = pyage2.bin.play:entry_point',
-            'pyage2_tournament = pyage2.bin.tournament:entry_point',
-            'pyage2_replay = pyage2.bin.replay:entry_point',
         ],
     },
     classifiers= [
