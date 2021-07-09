@@ -28,10 +28,11 @@ Built-in AI agents contains 10k+ rules. To get a high level understanding of how
 
 ```python
 class VillagersOnlyAgent(BaseAgent):
+    """I bet you not gonna win with this..."""
     def step(self, obs):
         if obs.observation['civilian_population'] < 130 \
                 and expert.can_train(obs.observation, 'Villager'):
-            yield actions.train('Villager')
+            return actions.train('Villager')
 ```
 
 Check out `pyage2.agents.ScriptedAgent` as an example of a primitive but fully-functional agent.
@@ -40,17 +41,19 @@ The system allows you to match different AI bots/agents in a single game.
 
 ## Motivation
 
-Compared to other learning environment based on games (e.g. Atari, VizDoom, PySC2, MicroRTS), "Age of Empires II" presents unique challenges for RL/ML research community.
+Compared to other learning environment based on games (e.g. Atari, VizDoom, PySC2, MicroRTS), "Age of Empires II" presents interesting challenges for RL/ML research community.
 
-**Hierarchical long-horizon planning** 
+**Long-horizon macromanagement planning** 
 
 RTS (Real Time Strategy) games are known for their complexity with respect to action planning. As it turned out, micromanagement (per-unit control) was easier to tackle, when macromanagement remains largely unsolved problem. "Age of Empires II" is a game where success is mainly determined by macromanagement (economy, build order, research, units production). Basic micromanagement tasks are scripted by the game engine, which means you don't need to worry about which villager should build a house and which unit should go first into the attack first.
+
+Another challenge with macromanagement level control is delayed reward signal. For example, setting workers allocation for resources in the beginning on the game will have large impact only on the late stages of the game.
 
 **Multiagent Coordination**
 
 The game allows up to 8 independent agents on a single map with flexible team formations (e.g. each agent on it's own team, or 4x4, or 2x2x2x2, etc). Agents do not have access to each other states. The coordination could be done only using in-game Chat. 
 
-**Transer Learning**
+**Transfer Learning**
 
 "Age of Empires II" comes with loads of different civilizations, modes, maps, and custom scenarious. Default option would be to learn a new agent for each formation, which leads to combinatorical explosion. Ideally, a good agent should "understand" core game mechanics and strategies, while being flexible to utilize different tech trees, available units, flexible map conditions, etc.
 
@@ -168,6 +171,13 @@ $ python -m pyage2.bin.replay <path-to-replay>
 
 [`openage`](https://openage.sft.mx/) is an open-source reimplementation of AOC engine that uses game assets but provides custom engine to run the game. It runs on all platforms, and exposes Python API for scripting. It should be possible to make the environment works on this engine, though I didn't have a chance to try to do so (as of now). Help wanted!
 
+# Dependencies
+
+The environments uses the following DLLs:
+
+* [aoc-auto-game](https://github.com/FLWL/aoc-auto-game)
+
+* [AoE2 AI Module](https://github.com/FLWL/aoe2-ai-module)
 
 # How to Contribute
 
