@@ -46,7 +46,7 @@ The system allows you to match different AI bots/agents in a single game.
 
 Compared to other learning environment based on games (e.g. Atari, VizDoom, PySC2, MicroRTS), "Age of Empires II" presents interesting challenges for RL/ML research community.
 
-## Long-horizon Macromanagement Planning
+## Long-horizon Macromanagement & Planning
 
 RTS (Real Time Strategy) games are known for their complexity with respect to action planning. As it turned out, micromanagement (per-unit control) was easier to tackle, when macromanagement remains largely unsolved problem. "Age of Empires II" is a game where success is mainly determined by macromanagement (economy, build order, research, units production). Basic micromanagement tasks are scripted by the game engine, which means you don't need to worry about which villager should build a house and which unit should go first into the attack first.
 
