@@ -1,5 +1,7 @@
 # PyAge2 - "Age of Empires II" Learning Environment
 
+**UNDER ACTIVE DEVELOPMENT**
+
 `PyAge2` allows to interact with "Age of Empires II: The Conquerors" game from OpenAI Gym compatible Reinforcement Learning environment.
 
 The environment runs the game process, injects DLLs that run a server within the game allowing external tools to interact with the it. Thanks to some internal hacks, the system is capable of simulating games at incredibly high speed (20-30 minutes game could be finished in seconds).
