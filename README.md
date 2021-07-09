@@ -1,14 +1,17 @@
 # PyAge2 - "Age of Empires II" Learning Environment
 
-`PyAge2` exposes "Age of Empires II: The Conquerors" game as a Reinforcement Learning environment (OpenGym compatible API).
+`PyAge2` allows to interact with "Age of Empires II: The Conquerors" game from
+OpenAI Gym compatible Reinforcement Learning environment.
 
-The environment runs the game process, injects DLL that exposes gRPC server  allowing external tools to interact with the game. Thanks to some internal hacks, the system is capable of simulating games at incrediblyS high speed (20-30 minutes game could be finished in seconds).
+The environment runs the game process, injects DLLs that run a server within the game. Allowing external tools to interact with the it. Thanks to some internal hacks, the system is capable of simulating games at incredibly high speed (20-30 minutes game could be finished in seconds).
 
-WIP. Additional goal of the project is to have a tool to deploy learned agent policies directly into the game process, bypassing the need to have a dedicated server to run the agent. With the help of this, the agent could be release as a publically available game Mod.
+WIP. Additional goal of the project is to have a tool to deploy learned agent policies directly into the game process, bypassing the need to have a dedicated server & client to run the agent. With the help of this, the agent could be release as a publically available game Mod.
 
 ## Disclamer
 
-The API used to manage the game process **is not officially supported** by game developers. As the system overrites game process memory directly, it could lead to game crash. Usage of the environment on live games (against other human players) will lead to permanent ban both on Steam and Voobly. By running the environment, the user implicitly acknowledge the risk, and consents on using the system strickly for research purposes.
+**IMPORTANT**
+
+The API used to manage the game process **is not officially supported** by game developers. As the system overwrites game process memory directly, it could lead to game crash. Usage of the environment on live games (against other human players) will lead to permanent ban both on Steam and Voobly. By running the environment, the user implicitly acknowledges the risk, and consents on using the system strickly for research purposes.
 
 ## Intro
 
