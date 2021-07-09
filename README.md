@@ -4,7 +4,7 @@
 
 `PyAge2` allows to interact with "Age of Empires II: The Conquerors" game from OpenAI Gym compatible Reinforcement Learning environment.
 
-The environment runs the game process, injects DLLs that run a server within the game allowing external tools to interact with the it. Thanks to some internal hacks, the system is capable of simulating games at incredibly high speed (20-30 minutes game could be finished in seconds).
+The environment runs the game process, injects the DLL that runs a server allowing external tools to interact with it programmatically. The system is capable of simulating games at incredibly high speed (20-30 minutes game could be finished in seconds).
 
 WIP. Additional goal of the project is to have a tool to deploy learned agent policies directly into the game process, bypassing the need to have a dedicated server & client to run the agent. With the help of this, the agent could be release as a publically available game Mod.
 
