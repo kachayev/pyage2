@@ -25,6 +25,7 @@ from pyage2.lib import LibraryInjector
 from pyage2.lib.bot import DEFAULT_NOOP_BOT_NAME
 from pyage2.lib.configs import GameConfig, PlayerType, RunConfig
 from pyage2.lib.expert import ExpertClient, _TECHNOLOGIES_INDEX, _BUILDINGS_INDEX, _UNITS_INDEX
+from pyage2.lib import actions
 
 import pyage2.expert.fact.fact_pb2 as fact
 import pyage2.expert.action.action_pb2 as action
@@ -342,11 +343,54 @@ class Age2Env(BaseEnv):
 
     def observation_spec(self):
         """Defines the observations provided by the environment."""
-        pass
+        # xxx(okachaiev): replace with more performant data structure
+        return {
+            # xxx(okachaiev): it seems like would be better to have
+            # feature in "object of arrays" rather than "array of objects"
+            # in this case, dimensionality would be (num_players, 1)
+            'current_age': (1,),
+            'current_age_time': (1,),
+            'score': (1,),
+            'population': (1,), 
+            'population_cap': (1,),
+            'population_headroom': (1,),
+            'civilian_population': (1,),
+            'military_population': (1,),
+            'housing_headroom': (1,),
+            'idle_farm_count': (1,),
+            'soldier_count': (1,),
+            'attack_soldier_count': (1,),
+            'defend_soldier_count': (1,),
+            'warboat_count': (1,),
+            'attack_warboat_count': (1,),
+            'defend_warboat_count': (1,),
+            'resources': (4,),
+            'resource_found': (4,),
+            'dropsite_min_distance': (4,),
+            'escrow': (4,),
+            'can_research': (len(_TECHNOLOGIES_INDEX),),
+            'can_train': (len(_UNITS_INDEX),),
+            'units': (len(_UNITS_INDEX),),
+            'can_build': (len(_BUILDINGS_INDEX),),
+            'buildings': (len(_BUILDINGS_INDEX),),
+        }
 
     def action_spec(self):
         """Defines the actions that could be provided to `step` method."""
-        pass
+        return [
+            (actions.no_op, []),
+            (actions.attack_now, []),
+            # xxx(okachaiev): we should probably enumerate all possible valid
+            # arguments to make "random" action possible
+            (actions.set_strategic_number, [int, int]),
+            (actions.set_strategic_number, [str, int]),
+            (actions.research, [int]),
+            (actions.research, [str]),
+            (actions.build, [int]),
+            (actions.build, [str]),
+            (actions.train, [int]),
+            (actions.train, [str]),
+        ]
 
     def close(self):
         """Frees up any resources associated with the environment (e.g. external
