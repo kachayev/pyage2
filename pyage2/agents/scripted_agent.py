@@ -122,8 +122,7 @@ class ScriptedAgent(BaseAgent):
                 and expert.can_build(obs.observation, 'Blacksmith'):
             yield actions.build('Blacksmith')
 
-        if obs.observation['current_age'] >= expert.AGE.feudal \
-                and expert.count_buildings(obs.observation, 'Barracks') == 0 \
+        if expert.count_buildings(obs.observation, 'Barracks') == 0 \
                 and expert.can_build(obs.observation, 'Barracks'):
             yield actions.build('Barracks')
 
