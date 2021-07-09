@@ -16,10 +16,9 @@ from setuptools import setup
 
 description = """PyAge2 - Age of Empires II Learning Environment
 
-PyAge2 is set of tools to programmatically manage games of "Age of Empires II: The Conquerors" with a
-custom AI bots (agents). The environment runs the game process, injects DLL that exposes gRPC server
-allowing external tools to interact with the game. Thanks to some internal hacks, the system is capable
-of simulating games at incradibly high speed (20-30 minutes game could be simualted in seconds).
+`PyAge2` allows to interact with "Age of Empires II: The Conquerors" game from OpenAI Gym compatible Reinforcement Learning environment.
+
+The system is capable of running games at incredibly high speed (20-30 minutes game could be simualted in seconds).
 
 Disclaimer: the API used to manage the game process **is not officially supported** by game developers.
 
