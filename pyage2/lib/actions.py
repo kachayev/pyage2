@@ -15,7 +15,8 @@
 from typing import Union
 
 import pyage2.expert.action.action_pb2 as action
-from  pyage2.lib import expert
+from pyage2.lib import expert
+from pyage2.lib.expert import StrategicNumber
 
 def no_op():
     return None
@@ -38,7 +39,6 @@ def research(tech_type: Union[str, int]):
 def attack_now():
     return action.AttackNow()
 
-def set_strategic_number(sn_id: Union[str, int], sn_value: int):
-    if isinstance(sn_id, str):
-        sn_id = expert.sn(sn_id)
+def set_strategic_number(sn_id: Union[StrategicNumber, int], sn_value: int):
+    if isinstance(sn_id, StrategicNumber): sn_id = sn_id.value
     return action.SetStrategicNumber(inConstSnId=sn_id, inConstValue=sn_value)

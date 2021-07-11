@@ -19,6 +19,7 @@ https://steamcommunity.com/sharedfiles/filedetails/?id=1238296169
 from pyage2.agents import BaseAgent
 from pyage2.lib import actions
 from pyage2.lib import expert
+from pyage2.lib.expert import StrategicNumber
 
 class ScriptedAgent(BaseAgent):
     """Simplest agent capable of building, training, and research."""
@@ -38,24 +39,24 @@ class ScriptedAgent(BaseAgent):
     def _set_strategic_numbers(self, obs):
         if not self.sn:
             self.sn = True
-            yield actions.set_strategic_number('sn-percent-civilian-explorers', 0)
-            yield actions.set_strategic_number('sn-total-number-explorers', 1)
-            yield actions.set_strategic_number('sn-number-explore-groups', 1)
-            yield actions.set_strategic_number('sn-enable-boar-hunting', 1)
+            yield actions.set_strategic_number(StrategicNumber.PERCENT_CIVILIAN_EXPLORERS, 0)
+            yield actions.set_strategic_number(StrategicNumber.TOTAL_NUMBER_EXPLORERS, 1)
+            yield actions.set_strategic_number(StrategicNumber.NUMBER_EXPLORE_GROUPS, 1)
+            yield actions.set_strategic_number(StrategicNumber.ENABLE_BOAR_HUNTING, 1)
 
-        if not self.sn_dark_age and obs.observation['current_age'] == expert.AGE.dark:
+        if not self.sn_dark_age and obs.observation['current_age'] == expert.AGE.DARK:
             self.sn_dark_age = True
-            yield actions.set_strategic_number('sn-food-gatherer-percentage', 80)
-            yield actions.set_strategic_number('sn-wood-gatherer-percentage', 20)
-            yield actions.set_strategic_number('sn-gold-gatherer-percentage', 0)
-            yield actions.set_strategic_number('sn-stone-gatherer-percentage', 0)
+            yield actions.set_strategic_number(StrategicNumber.FOOD_GATHERER_PERCENTAGE, 80)
+            yield actions.set_strategic_number(StrategicNumber.WOOD_GATHERER_PERCENTAGE, 20)
+            yield actions.set_strategic_number(StrategicNumber.GOLD_GATHERER_PERCENTAGE, 0)
+            yield actions.set_strategic_number(StrategicNumber.STONE_GATHERER_PERCENTAGE, 0)
 
-        if not self.sn_feudal_age and obs.observation['current_age'] == expert.AGE.feudal:
+        if not self.sn_feudal_age and obs.observation['current_age'] == expert.AGE.FEUDAL:
             self.sn_feudal_age = True
-            yield actions.set_strategic_number('sn-food-gatherer-percentage', 50)
-            yield actions.set_strategic_number('sn-wood-gatherer-percentage', 30)
-            yield actions.set_strategic_number('sn-gold-gatherer-percentage', 15)
-            yield actions.set_strategic_number('sn-stone-gatherer-percentage', 5)
+            yield actions.set_strategic_number(StrategicNumber.FOOD_GATHERER_PERCENTAGE, 50)
+            yield actions.set_strategic_number(StrategicNumber.WOOD_GATHERER_PERCENTAGE, 30)
+            yield actions.set_strategic_number(StrategicNumber.GOLD_GATHERER_PERCENTAGE, 15)
+            yield actions.set_strategic_number(StrategicNumber.STONE_GATHERER_PERCENTAGE, 5)
 
     # xxx(okachaiev): need to deal with strategic numbers as well
     def _actions(self, obs):
@@ -112,7 +113,7 @@ class ScriptedAgent(BaseAgent):
                 and expert.can_build(obs.observation, 'Farm'):
             yield actions.build('Farm')
 
-        if obs.observation['current_age'] >= expert.AGE.feudal \
+        if obs.observation['current_age'] >= expert.AGE.FEUDAL \
                 and expert.resource_found(obs.observation, 'Gold') \
                 and expert.dropsite_min_distance(obs.observation, 'Gold') > 3 \
                 and expert.can_build(obs.observation, 'Mining Camp'):
@@ -126,7 +127,7 @@ class ScriptedAgent(BaseAgent):
                 and expert.can_build(obs.observation, 'Barracks'):
             yield actions.build('Barracks')
 
-        if obs.observation['current_age'] >= expert.AGE.feudal \
+        if obs.observation['current_age'] >= expert.AGE.FEUDAL \
                 and expert.count_buildings(obs.observation, 'Archery Range') == 0 \
                 and expert.can_build(obs.observation, 'Archery Range'):
             yield actions.build('Archery Range')
