@@ -206,6 +206,10 @@ class Age2Env(BaseEnv):
         if self._state == Age2EnvState.START:
             self.reset()
 
+        # xxx(okachaiev): i'm not sure checking this up in a single place
+        # is quite enough. maybe we need to run background thread to do this
+        # periodically? though i don't know what would be a good way to
+        # propage the error into working module when it occurs
         if not self.process_running:
             raise Age2ProcessError("'Age of Empires II' process was terminated.")
 
@@ -231,6 +235,9 @@ class Age2Env(BaseEnv):
     @property
     def game_time(self):
         if self._autogame_client is None: return 0
+
+        # xxx(okachaiev): need to wrap all API calls to msgpack
+        # to catch error and re-throw them as `Age2ProcessError`
         return float(self._autogame_client.call('GetGameTime'))
 
     @property
