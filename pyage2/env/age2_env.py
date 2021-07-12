@@ -23,8 +23,8 @@ from typing import List
 from pyage2.env.core import BaseEnv
 from pyage2.lib import LibraryInjector
 from pyage2.lib.bot import DEFAULT_NOOP_BOT_NAME
-from pyage2.lib.configs import GameConfig, PlayerType, RunConfig
-from pyage2.lib.expert import ExpertClient, _TECHNOLOGIES_INDEX, _BUILDINGS_INDEX, _UNITS_INDEX
+from pyage2.lib.configs import GameConfig, PlayerCivilization, PlayerType, RunConfig
+from pyage2.lib.expert import ExpertClient, ObjectType, Resource, TechType
 from pyage2.lib import actions
 
 import pyage2.expert.fact.fact_pb2 as fact
@@ -256,57 +256,51 @@ class Age2Env(BaseEnv):
             ('resources.1', fact.WoodAmount(), fact.WoodAmountResult),
             ('resources.2', fact.GoldAmount(), fact.GoldAmountResult),
             ('resources.3', fact.StoneAmount(), fact.StoneAmountResult),
-
-            # resources found
-            ('resource_found.0', fact.ResourceFound(inConstResource=0), fact.ResourceFoundResult),
-            ('resource_found.1', fact.ResourceFound(inConstResource=1), fact.ResourceFoundResult),
-            ('resource_found.2', fact.ResourceFound(inConstResource=2), fact.ResourceFoundResult),
-            ('resource_found.3', fact.ResourceFound(inConstResource=3), fact.ResourceFoundResult),
-
-            # dropsite distance
-            ('dropsite_min_distance.0', fact.DropsiteMinDistance(inConstResource=0), fact.DropsiteMinDistanceResult),
-            ('dropsite_min_distance.1', fact.DropsiteMinDistance(inConstResource=1), fact.DropsiteMinDistanceResult),
-            ('dropsite_min_distance.2', fact.DropsiteMinDistance(inConstResource=2), fact.DropsiteMinDistanceResult),
-            ('dropsite_min_distance.3', fact.DropsiteMinDistance(inConstResource=3), fact.DropsiteMinDistanceResult),
-
-            # escrow
-            ('escrow.0', fact.EscrowAmount(inConstResource=0), fact.EscrowAmountResult),
-            ('escrow.1', fact.EscrowAmount(inConstResource=1), fact.EscrowAmountResult),
-            ('escrow.2', fact.EscrowAmount(inConstResource=2), fact.EscrowAmountResult),
-            ('escrow.3', fact.EscrowAmount(inConstResource=3), fact.EscrowAmountResult),
         ]
 
-        can_research_facts = [
-            (f"can_research.{i}", fact.CanResearch(inConstTechId=tech_id), fact.CanResearchResult)
-            for i, tech_id in enumerate(_TECHNOLOGIES_INDEX)
+        resource_found_facts = [
+            (f"resource_found.{i}", fact.ResourceFound(inConstResource=resource.value), fact.ResourceFoundResult)
+            for i, resource in enumerate(Resource)
+        ]
+
+        dropsite_min_distance_facts = [
+            (f"dropsite_min_distance.{i}", fact.DropsiteMinDistance(inConstResource=resource.value), fact.DropsiteMinDistanceResult)
+            for i, resource in enumerate(Resource)
+        ]
+
+        escrow_facts = [
+            (f"escrow.{i}", fact.EscrowAmount(inConstResource=resource.value), fact.EscrowAmountResult)
+            for i, resource in enumerate(Resource)
+        ]
+
+        object_count_facts = [
+            (f"object_count.{i}", fact.UnitTypeCount(inConstUnitId=object_type.value), fact.UnitTypeCountResult)
+            for i, object_type in enumerate(ObjectType)
         ]
 
         can_train_facts = [
-            (f"can_train.{i}", fact.CanTrain(inConstUnitId=unit_id), fact.CanTrainResult)
-            for i, unit_id in enumerate(_UNITS_INDEX)
-        ]
-
-        unit_facts = [
-            (f"units.{i}", fact.UnitTypeCount(inConstUnitId=unit_id), fact.UnitTypeCountResult)
-            for i, unit_id in enumerate(_UNITS_INDEX)
+            (f"can_train.{i}", fact.CanTrain(inConstUnitId=unit_id.value), fact.CanTrainResult)
+            for i, unit_id in enumerate(ObjectType)
         ]
 
         can_build_facts = [
-            (f"can_build.{i}", fact.CanBuild(inConstBuildingId=building_id), fact.CanBuildResult)
-            for i, building_id in enumerate(_BUILDINGS_INDEX)
+            (f"can_build.{i}", fact.CanBuild(inConstBuildingId=building_id.value), fact.CanBuildResult)
+            for i, building_id in enumerate(ObjectType)
         ]
 
-        building_facts = [
-            (f"buildings.{i}", fact.BuildingTypeCount(inConstBuildingId=building_id), fact.BuildingTypeCountResult)
-            for i, building_id in enumerate(_BUILDINGS_INDEX)
+        can_research_facts = [
+            (f"can_research.{i}", fact.CanResearch(inConstTechId=tech_id.value), fact.CanResearchResult)
+            for i, tech_id in enumerate(TechType)
         ]
 
         all_facts = generic_facts + \
+            resource_found_facts + \
+            dropsite_min_distance_facts + \
+            escrow_facts + \
+            object_count_facts + \
             can_research_facts + \
             can_train_facts + \
-            can_build_facts + \
-            unit_facts + \
-            building_facts
+            can_build_facts
 
         expert_obs = self._expert_client.player_facts(player_id, all_facts)
 
@@ -343,6 +337,7 @@ class Age2Env(BaseEnv):
 
     def observation_spec(self):
         """Defines the observations provided by the environment."""
+        num_objects = len(ObjectType)
         # xxx(okachaiev): replace with more performant data structure
         return {
             # xxx(okachaiev): it seems like would be better to have
@@ -368,11 +363,10 @@ class Age2Env(BaseEnv):
             'resource_found': (4,),
             'dropsite_min_distance': (4,),
             'escrow': (4,),
-            'can_research': (len(_TECHNOLOGIES_INDEX),),
-            'can_train': (len(_UNITS_INDEX),),
-            'units': (len(_UNITS_INDEX),),
-            'can_build': (len(_BUILDINGS_INDEX),),
-            'buildings': (len(_BUILDINGS_INDEX),),
+            'object_count': (num_objects,),
+            'can_research': (num_objects,),
+            'can_train': (num_objects,),
+            'can_build': (num_objects,),
         }
 
     def action_spec(self):
@@ -383,13 +377,9 @@ class Age2Env(BaseEnv):
             # xxx(okachaiev): we should probably enumerate all possible valid
             # arguments to make "random" action possible
             (actions.set_strategic_number, [int, int]),
-            (actions.set_strategic_number, [str, int]),
             (actions.research, [int]),
-            (actions.research, [str]),
             (actions.build, [int]),
-            (actions.build, [str]),
             (actions.train, [int]),
-            (actions.train, [str]),
         ]
 
     def close(self):

@@ -19,7 +19,7 @@ https://steamcommunity.com/sharedfiles/filedetails/?id=1238296169
 from pyage2.agents import BaseAgent
 from pyage2.lib import actions
 from pyage2.lib import expert
-from pyage2.lib.expert import StrategicNumber
+from pyage2.lib.expert import StrategicNumber, ObjectType, Resource, TechType
 
 class ScriptedAgent(BaseAgent):
     """Simplest agent capable of building, training, and research."""
@@ -68,66 +68,66 @@ class ScriptedAgent(BaseAgent):
         
         # xxx(okachaiev): should this be base agent API
         # like, self.can_research and self.tech?
-        if expert.can_research(obs.observation, 'Loom'):
-            yield actions.research('Loom')
+        if expert.can_research(obs.observation, TechType.LOOM):
+            yield actions.research(TechType.LOOM)
 
-        if expert.can_research(obs.observation, 'Fletching'):
-            yield actions.research('Fletching')
+        if expert.can_research(obs.observation, TechType.FLETCHING):
+            yield actions.research(TechType.FLETCHING)
 
         if obs.observation['civilian_population'] >= 19 \
-                and expert.can_research(obs.observation, 'Feudal Age'):
+                and expert.can_research(obs.observation, TechType.FEUDAL_AGE):
             # xxx(okachaiev): if we don't have access to the result of previous
             # actions... how do we know that this action should not be issued again?
             # even if we have "research status", "building queue", and "training queue"...
             # actions are still issued in parallel to the game process, so race condition
             # could still happen even if we are extremly precise with our rules
-            yield actions.research('Feudal Age')
+            yield actions.research(TechType.FEUDAL_AGE)
 
         if obs.observation['civilian_population'] < 130 \
-                and expert.can_train(obs.observation, 'Villager'):
-            yield actions.train('Villager')
+                and expert.can_train(obs.observation, ObjectType.VILLAGER):
+            yield actions.train(ObjectType.VILLAGER)
 
-        if expert.can_train(obs.observation, 'Man-at-Arms'):
-            yield actions.train('Man-at-Arms')
-        elif expert.can_train(obs.observation, 'Militia'):
-            yield actions.train('Militia')
-        elif expert.can_train(obs.observation, 'Archer'):
-            yield actions.train('Archer')
+        if expert.can_train(obs.observation, ObjectType.MAN_AT_ARMS):
+            yield actions.train(ObjectType.MAN_AT_ARMS)
+        elif expert.can_train(obs.observation, ObjectType.MILITIA):
+            yield actions.train(ObjectType.MILITIA)
+        elif expert.can_train(obs.observation, ObjectType.ARCHER):
+            yield actions.train(ObjectType.ARCHER)
 
         if obs.observation['housing_headroom'] < 5 \
                 and obs.observation['population_headroom'] != 0 \
-                and expert.can_build(obs.observation, 'House'):
-            yield actions.build('House')
+                and expert.can_build(obs.observation, ObjectType.HOUSE):
+            yield actions.build(ObjectType.HOUSE)
 
-        if expert.resource_found(obs.observation, 'Wood') \
-                and expert.dropsite_min_distance(obs.observation, 'Wood') > 3 \
-                and expert.can_build(obs.observation, 'Lumber Camp'):
-            yield actions.build('Lumber Camp')
+        if expert.resource_found(obs.observation, Resource.WOOD) \
+                and expert.dropsite_min_distance(obs.observation, Resource.WOOD) > 3 \
+                and expert.can_build(obs.observation, ObjectType.LUMBER_CAMP):
+            yield actions.build(ObjectType.LUMBER_CAMP)
 
-        if expert.resource_found(obs.observation, 'Food') \
-                and expert.dropsite_min_distance(obs.observation, 'Food') > 3 \
-                and expert.can_build(obs.observation, 'Mill'):
-            yield actions.build('Mill')
+        if expert.resource_found(obs.observation, Resource.FOOD) \
+                and expert.dropsite_min_distance(obs.observation, Resource.FOOD) > 3 \
+                and expert.can_build(obs.observation, ObjectType.MILL):
+            yield actions.build(ObjectType.MILL)
 
-        if expert.count_buildings(obs.observation, 'Farm') < 6 \
-                and expert.can_build(obs.observation, 'Farm'):
-            yield actions.build('Farm')
-
-        if obs.observation['current_age'] >= expert.AGE.FEUDAL \
-                and expert.resource_found(obs.observation, 'Gold') \
-                and expert.dropsite_min_distance(obs.observation, 'Gold') > 3 \
-                and expert.can_build(obs.observation, 'Mining Camp'):
-            yield actions.build('Mining Camp')
-
-        if expert.count_buildings(obs.observation, 'Blacksmith') == 0 \
-                and expert.can_build(obs.observation, 'Blacksmith'):
-            yield actions.build('Blacksmith')
-
-        if expert.count_buildings(obs.observation, 'Barracks') == 0 \
-                and expert.can_build(obs.observation, 'Barracks'):
-            yield actions.build('Barracks')
+        if expert.count_buildings(obs.observation, ObjectType.FARM) < 6 \
+                and expert.can_build(obs.observation, ObjectType.FARM):
+            yield actions.build(ObjectType.FARM)
 
         if obs.observation['current_age'] >= expert.AGE.FEUDAL \
-                and expert.count_buildings(obs.observation, 'Archery Range') == 0 \
-                and expert.can_build(obs.observation, 'Archery Range'):
-            yield actions.build('Archery Range')
+                and expert.resource_found(obs.observation, Resource.GOLD) \
+                and expert.dropsite_min_distance(obs.observation, Resource.GOLD) > 3 \
+                and expert.can_build(obs.observation, ObjectType.MINING_CAMP):
+            yield actions.build(ObjectType.MINING_CAMP)
+
+        if expert.count_buildings(obs.observation, ObjectType.BLACKSMITH) == 0 \
+                and expert.can_build(obs.observation, ObjectType.BLACKSMITH):
+            yield actions.build(ObjectType.BLACKSMITH)
+
+        if expert.count_buildings(obs.observation, ObjectType.BARRACKS) == 0 \
+                and expert.can_build(obs.observation, ObjectType.BARRACKS):
+            yield actions.build(ObjectType.BARRACKS)
+
+        if obs.observation['current_age'] >= expert.AGE.FEUDAL \
+                and expert.count_buildings(obs.observation, ObjectType.ARCHERY_RANGE) == 0 \
+                and expert.can_build(obs.observation, ObjectType.ARCHERY_RANGE):
+            yield actions.build(ObjectType.ARCHERY_RANGE)

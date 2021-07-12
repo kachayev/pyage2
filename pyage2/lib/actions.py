@@ -16,24 +16,24 @@ from typing import Union
 
 import pyage2.expert.action.action_pb2 as action
 from pyage2.lib import expert
-from pyage2.lib.expert import StrategicNumber
+from pyage2.lib.expert import StrategicNumber, ObjectType, TechType
 
 def no_op():
     return None
 
-def build(building_type: Union[str, int]):
-    if isinstance(building_type, str):
-        building_type = expert.building(building_type)
+def build(building_type: Union[ObjectType, int]):
+    if isinstance(building_type, ObjectType):
+        building_type = building_type.value
     return action.Build(inConstBuildingId=building_type)
 
-def train(unit_type: Union[str, int]):
-    if isinstance(unit_type, str):
-        unit_type = expert.unit(unit_type)
+def train(unit_type: Union[ObjectType, int]):
+    if isinstance(unit_type, ObjectType):
+        unit_type = unit_type.value
     return action.Train(inConstUnitId=unit_type)
 
-def research(tech_type: Union[str, int]):
-    if isinstance(tech_type, str):
-        tech_type = expert.tech(tech_type)
+def research(tech_type: Union[TechType, int]):
+    if isinstance(tech_type, TechType):
+        tech_type = tech_type.value
     return action.Research(inConstTechId=tech_type)
 
 def attack_now():

@@ -18,6 +18,7 @@ from google.protobuf.any_pb2 import Any
 import grpc
 from typing import Any as AnyType, List, Tuple
 
+from pyage2.lib.utils import enum_ordering
 import pyage2.protos.expert.expert_api_pb2_grpc as expert_grpc
 import pyage2.protos.expert.expert_api_pb2 as expert
 
@@ -78,288 +79,11 @@ class ExpertClient:
             self._channel.close()
             self._channel = None
 
-# xxx(okachaiev): I'm not sure we need all of them
-_TECHNOLOGIES = {
-    "2": "Elite Tarkan",
-    "3": "Yeomen",
-    "4": "El Dorado",
-    "5": "Furor Celtica",
-    "6": "Drill",
-    "7": "Mahouts",
-    "8": "Town Watch",
-    "9": "Zealotry",
-    "10": "Artillery",
-    "11": "Crenellations",
-    "12": "Crop Rotation",
-    "13": "Heavy Plow",
-    "14": "Horse Collar",
-    "15": "Guilds",
-    "16": "Anarchy",
-    "17": "Banking",
-    "19": "Cartography",
-    "21": "Atheism",
-    "22": "Loom",
-    "23": "Coinage",
-    "24": "Garland Wars",
-    "27": "Plumed Archer",
-    "34": "War Galley",
-    "35": "Galleon",
-    "37": "Cannon Galleon",
-    "39": "Husbandry",
-    "45": "Faith",
-    "47": "Chemistry",
-    "48": "Caravan",
-    "49": "Berserkergang",
-    "50": "Masonry",
-    "51": "Architecture",
-    "52": "Rocketry",
-    "54": "Treadmill Crane",
-    "55": "Gold Mining",
-    "57": "Cannon Galleon",
-    "59": "Kataparuto",
-    "60": "Elite Conquistador",
-    "61": "Logistica",
-    "63": "Keep",
-    "64": "Bombard Tower",
-    "67": "Forging",
-    "68": "Iron Casting",
-    "74": "Scale Mail Armor",
-    "75": "Blast Furnace",
-    "76": "Chain Mail Armor",
-    "77": "Plate Mail Armor",
-    "80": "Plate Barding Armor",
-    "81": "Scale Barding Armor",
-    "82": "Chain Barding Armor",
-    "83": "Bearded Axe",
-    "85": "Hand Cannon",
-    "90": "Tracking",
-    "93": "Ballistics",
-    "94": "Scorpion",
-    "96": "Capped Ram",
-    "98": "Elite Skirmisher",
-    "100": "Crossbowman",
-    "101": "Feudal Age",
-    "102": "Castle Age",
-    "103": "Imperial Age",
-    "104": "Dark Age",
-    "110": "Yes",
-    "140": "Guard Tower",
-    "172": "Roggan",
-    "174": "Wololo",
-    "175": "What Age Are You In?",
-    "178": "Wait for My Signal to Attack",
-    "182": "Gold Shaft Mining",
-    "188": "Bombard Cannon",
-    "192": "Roggan",
-    "194": "Fortified Wall",
-    "197": "Pikeman",
-    "199": "Fletching",
-    "200": "Bodkin Arrow",
-    "201": "Bracer",
-    "202": "Double-Bit Axe",
-    "203": "Bow Saw",
-    "207": "Long Swordsman",
-    "209": "Cavalier",
-    "211": "Padded Archer Armor",
-    "212": "Leather Archer Armor",
-    "213": "Wheelbarrow",
-    "215": "Squires",
-    "217": "Two-Handed Swordsman",
-    "218": "Heavy Cav Archer",
-    "219": "Ring Archer Armor",
-    "221": "Two-Man Saw",
-    "222": "Man-at-Arms",
-    "230": "Block Printing",
-    "231": "Sanctity",
-    "233": "Illumination",
-    "236": "Heavy Camel",
-    "237": "Arbalest",
-    "239": "Heavy Scorpion",
-    "244": "Heavy Demolition Ship",
-    "246": "Fast Fire Ship",
-    "249": "Hand Cart",
-    "252": "Fervor",
-    "254": "Light Cavalry",
-    "255": "Siege Ram",
-    "257": "Onager",
-    "264": "Champion",
-    "265": "Paladin",
-    "278": "Stone Mining",
-    "279": "Stone Shaft Mining",
-    "280": "Town Patrol",
-    "315": "Conscription",
-    "316": "Redemption",
-    "317": "Logistica",
-    "319": "Atonement",
-    "320": "Siege Onager",
-    "321": "Sappers",
-    "322": "Murder Holes",
-    "332": "Bearded Axe",
-    "353": "Supremacy",
-    "360": "Elite Longbowman",
-    "361": "Elite Cataphract",
-    "362": "Elite Chu Ko Nu",
-    "363": "Elite Throwing Axeman",
-    "364": "Elite Teutonic Knight",
-    "365": "Elite Huskarl",
-    "366": "Elite Samurai",
-    "367": "Elite War Elephant",
-    "368": "Elite Mameluke",
-    "369": "Elite Janissary",
-    "370": "Elite Woad Raider",
-    "371": "Elite Mangudai",
-    "372": "Elite Longboat",
-    "373": "Shipwright",
-    "374": "Careening",
-    "375": "Dry Dock",
-    "376": "Elite Cannon Galleon",
-    "377": "Siege Engineers",
-    "379": "Hoardings",
-    "380": "Heated Shot",
-    "398": "Elite Berserk",
-    "408": "Spies/Treason",
-    "428": "Hussar",
-    "429": "Halberdier",
-    "432": "Elite Jaguar Warrior",
-    "434": "Elite Eagle Warrior",
-    "435": "Bloodlines",
-    "436": "Parthian Tactics",
-    "437": "Thumb Ring",
-    "438": "Theocracy",
-    "439": "Heresy",
-    "440": "Supremacy",
-    "441": "Herbal Medicine",
-    "445": "Shinkichon",
-    "448": "Elite Turtle Ship",
-    "450": "Elite War Wagon",
-    "457": "Perfusion"
-}
-
-# xxx(okachaiev): not all of them
-_UNITS = {
-    "4": "Archer",
-    "5": "Hand Cannoneer",
-    "6": "Elite Skirmisher",
-    "7": "Skirmisher",
-    "8": "Longbowman",
-    "11": "Mangudai",
-    "24": "Crossbowman",
-    "25": "Teutonic Knight",
-    "37": "Light Cavalry",
-    "38": "Knight",
-    "39": "Cavalry Archer",
-    "40": "Cataphract",
-    "41": "Huskarl",
-    "42": "Trebuchet",
-    "46": "Janissary",
-    "48": "Wild Boar",
-    "56": "Fisherman",
-    "74": "Militia", 
-    "75": "Man-at-Arms",
-    "76": "Heavy Swordsman",
-    "77": "Long Swordsman",
-    "83": "Villager",
-    "93": "Spearman",
-    "94": "Berserk",
-    "118": "Builder",
-    "120": "Forager",
-    "122": "Hunter",
-    "123": "Lumberjack",
-    "124": "Stone Miner",
-    "125": "Monk",
-    "156": "Repairer",
-}
-
-# xxx(okachaiev): not all of them
-_BUILDINGS = {
-    "10": "Archery Range",
-    "12": "Barracks",
-    "15": "Junk",
-    "17": "Trade Cog",
-    "18": "Blacksmith",
-    "21": "War Galley",
-    "30": "Monastery",
-    "33": "Castle",
-    "35": "Battering Ram",
-    "45": "Dock",
-    "46": "Janissary",
-    "49": "Siege Workshop",
-    "50": "Farm",
-    "59": "Forage Bush",
-    "63": "Gate",
-    "66": "Gold Mine",
-    "68": "Mill",
-    "70": "House",
-    "71": "Town Center",
-    "72": "Palisade Wall",
-    "79": "Watch Tower",
-    "84": "Market",
-    "102": "Stone Mine",
-    "110": "Trade Workshop",
-    "112": "Flare",
-    "116": "Market",
-    "117": "Stone Wall",
-    "562": "Lumber Camp",
-    "584": "Mining Camp", 
-}
-
-_TECHNOLOGIES_NAME = {v:(index, int(k)) for index, (k, v) in enumerate(_TECHNOLOGIES.items())}
-_TECHNOLOGIES_INDEX = [int(k) for k in _TECHNOLOGIES.keys()]
-
-def tech(name: str):
-    _, tech_id = _TECHNOLOGIES_NAME.get(name)
-    return tech_id
-
-def can_research(obs, name):
-    index, _ = _TECHNOLOGIES_NAME.get(name)
-    return obs['can_research'][index]
-
-# xxx(okachaiev): code duplication, like a lot
-
-_BUILDINGS_NAME = {v:(index, int(k)) for index, (k, v) in enumerate(_BUILDINGS.items())}
-_BUILDINGS_INDEX = [int(k) for k in _BUILDINGS.keys()]
-
-def building(name: str):
-    _, building_id = _BUILDINGS_NAME.get(name)
-    return building_id
-
-def building_index(name: str):
-    index, _ = _BUILDINGS_NAME.get(name)
-    return index
-
-def can_build(obs, name):
-    return obs['can_build'][building_index(name)]
-
-# xxx(okachaiev): maybe it makes sense to maintain same
-# naming conventions as scripting languages provide?
-def count_buildings(obs, name: str):
-    return obs['buildings'][building_index(name)]
-
-# xxx(okachaiev): code duplication, like a lot
-
-_UNITS_NAME = {v:(index, int(k)) for index, (k, v) in enumerate(_UNITS.items())}
-_UNITS_INDEX = [int(k) for k in _UNITS.keys()]
-
-def unit(name: str):
-    _, unit_id = _UNITS_NAME.get(name)
-    return unit_id
-
-def can_train(obs, name):
-    index, _ = _UNITS_NAME.get(name)
-    return obs['can_train'][index]
-
-# xxx(okachaiev): rework this part :(
-class ResourceIndex:
+class Resource(IntEnum):
     FOOD = 0
     WOOD = 1
     GOLD = 2
     STONE = 3
-
-def dropsite_min_distance(obs, resource_name: str):
-    return obs['dropsite_min_distance'][getattr(ResourceIndex, resource_name.upper())]
-
-def resource_found(obs, resource_name: str):
-    return obs['resource_found'][getattr(ResourceIndex, resource_name.upper())]
 
 class AGE(IntEnum):
     DARK = 0
@@ -367,6 +91,7 @@ class AGE(IntEnum):
     CASTLE = 2
     IMPERIAL = 3
 
+@enum_ordering
 class StrategicNumber(Enum):
     PERCENT_CIVILIAN_EXPLORERS = 0
     PERCENT_CIVILIAN_BUILDERS = 1
@@ -530,4 +255,904 @@ class StrategicNumber(Enum):
     TARGET_POINT_ADJUSTMENT = 292
     UNEXPLORED_CONSTRUCTION = 293
     DISABLE_TRADE_EVASION = 294
-    BOAR_LURE_DESTINATION = 295 
+    BOAR_LURE_DESTINATION = 295
+
+@enum_ordering
+class TechType(IntEnum):
+    ELITE_TARKAN = 2
+    YEOMEN = 3
+    EL_DORADO = 4
+    FUROR_CELTICA = 5
+    DRILL = 6
+    MAHOUTS = 7
+    TOWN_WATCH = 8
+    ZEALOTRY = 9
+    ARTILLERY = 10
+    CRENELLATIONS = 11
+    CROP_ROTATION = 12
+    HEAVY_PLOW = 13
+    HORSE_COLLAR = 14
+    GUILDS = 15
+    ANARCHY = 16
+    BANKING = 17
+    CARTOGRAPHY = 19
+    ATHEISM = 21
+    LOOM = 22
+    COINAGE = 23
+    GARLAND_WARS = 24
+    ELITE_PLUMED_ARCHER = 27
+    WAR_GALLEY = 34
+    GALLEON = 35
+    CANNON_GALLEON = 37
+    HUSBANDRY = 39
+    FAITH = 45
+    CHEMISTRY = 47
+    CARAVAN = 48
+    BERSERKERGANG = 49
+    MASONRY = 50
+    ARCHITECTURE = 51
+    ROCKETRY = 52
+    TREADMILL_CRANE = 54
+    GOLD_MINING = 55
+    KATAPARUTO = 59
+    ELITE_CONQUISTADOR = 60
+    LOGISTICA = 61
+    KEEP = 63
+    BOMBARD_TOWER = 64
+    GILLNETS = 65
+    FORGING = 67
+    IRON_CASTING = 68
+    SCALE_MAIL_ARMOR = 74
+    BLAST_FURNACE = 75
+    CHAIN_MAIL_ARMOR = 76
+    PLATE_MAIL_ARMOR = 77
+    PLATE_BARDING_ARMOR = 80
+    SCALE_BARDING_ARMOR = 81
+    CHAIN_BARDING_ARMOR = 82
+    BEARDED_AXE = 83
+    HAND_CANNON = 85
+    TRACKING = 90
+    BALLISTICS = 93
+    SCORPION = 94
+    CAPPED_RAM = 96
+    ELITE_SKIRMISHER = 98
+    CROSSBOWMAN = 100
+    FEUDAL_AGE = 101
+    CASTLE_AGE = 102
+    IMPERIAL_AGE = 103
+    DARK_AGE = 104
+    GUARD_TOWER = 140
+    UPROOTING = 152
+    GOLD_SHAFT_MINING = 182
+    BOMBARD_CANNON = 188
+    FORTIFIED_WALL = 194
+    PIKEMAN = 197
+    FLETCHING = 199
+    BODKIN_ARROW = 200
+    BRACER = 201
+    DOUBLE_BIT_AXE = 202
+    BOW_SAW = 203
+    LONG_SWORDSMAN = 207
+    CAVALIER = 209
+    PADDED_ARCHER_ARMOR = 211
+    LEATHER_ARCHER_ARMOR = 212
+    WHEELBARROW = 213
+    SQUIRES = 215
+    TWO_HANDED_SWORDSMAN = 217
+    HEAVY_CAV_ARCHER = 218
+    RING_ARCHER_ARMOR = 219
+    TWO_MAN_SAW = 221
+    MAN_AT_ARMS = 222
+    BLOCK_PRINTING = 230
+    SANCTITY = 231
+    ILLUMINATION = 233
+    HEAVY_CAMEL = 236
+    ARBALEST = 237
+    HEAVY_SCORPION = 239
+    HEAVY_DEMOLITION_SHIP = 244
+    FAST_FIRE_SHIP = 246
+    HAND_CART = 249
+    FERVOR = 252
+    LIGHT_CAVALRY = 254
+    SIEGE_RAM = 255
+    ONAGER = 257
+    MAGHRABI_CAMELS = 261
+    FARIMBA = 262
+    CHAMPION = 264
+    PALADIN = 265
+    STONE_MINING = 278
+    STONE_SHAFT_MINING = 279
+    TOWN_PATROL = 280
+    TUSK_SWORDS = 285
+    DOUBLE_CROSSBOW = 287
+    FORCED_LEVY = 289
+    PAPER_MONEY = 306
+    ELITE_RATTAN_ARCHER = 314
+    CONSCRIPTION = 315
+    REDEMPTION = 316
+    ATONEMENT = 319
+    SIEGE_ONAGER = 320
+    SAPPERS = 321
+    MURDER_HOLES = 322
+    ELITE_LONGBOWMAN = 360
+    ELITE_CATAPHRACT = 361
+    ELITE_CHU_KO_NU = 362
+    ELITE_THROWING_AXEMAN = 363
+    ELITE_TEUTONIC_KNIGHT = 364
+    ELITE_HUSKARL = 365
+    ELITE_SAMURAI = 366
+    ELITE_WAR_ELEPHANT = 367
+    ELITE_MAMELUKE = 368
+    ELITE_JANISSARY = 369
+    ELITE_WOAD_RAIDER = 370
+    ELITE_MANGUDAI = 371
+    ELITE_LONGBOAT = 372
+    SHIPWRIGHT = 373
+    CAREENING = 374
+    DRY_DOCK = 375
+    ELITE_CANNON_GALLEON = 376
+    SIEGE_ENGINEERS = 377
+    HOARDINGS = 379
+    HEATED_SHOT = 380
+    EAGLE_WARRIOR = 384
+    ELITE_BERSERK = 398
+    SPIES_TREASON = 408
+    HUSSAR = 428
+    HALBERDIER = 429
+    ELITE_JAGUAR_WARRIOR = 432
+    ELITE_EAGLE_WARRIOR = 434
+    BLOODLINES = 435
+    PARTHIAN_TACTICS = 436
+    THUMB_RING = 437
+    THEOCRACY = 438
+    HERESY = 439
+    SUPREMACY = 440
+    HERBAL_MEDICINE = 441
+    SHINKICHON = 445
+    ELITE_TURTLE_SHIP = 448
+    ELITE_WAR_WAGON = 450
+    PERFUSION = 457
+    ATLATL = 460
+    WARWOLF = 461
+    GREAT_WALL = 462
+    CHIEFTAINS = 463
+    GREEK_FIRE = 464
+    ELITE_GENOESE_CROSSBOWMAN = 468
+    ELITE_MAGYAR_HUSZAR = 472
+    ELITE_ELEPHANT_ARCHER = 481
+    STRONGHOLD = 482
+    MARAUDERS = 483
+    YASAMA = 484
+    OBSIDIAN_ARROWS = 485
+    PANOKSEON = 486
+    NOMADS = 487
+    BOILING_OIL = 488
+    IRONCLAD = 489
+    MADRASAH = 490
+    SIPAHI = 491
+    INQUISITION = 492
+    CHIVALRY = 493
+    PAVISE = 494
+    SILK_ROAD = 499
+    ELITE_BOYAR = 504
+    SULTANS = 506
+    SHATAGNI = 507
+    ELITE_KAMAYUK = 509
+    ORTHODOXY = 512
+    DRUZHINA = 513
+    MERCENARIES = 514
+    RECURVE_BOW = 515
+    ANDEAN_SLING = 516
+    COURIERS = 517
+    IMPERIAL_CAMEL = 521
+    REVETMENTS = 525
+    HUNTING_DOGS = 526
+    FIRE_TOWER = 527
+    BRITONS = 529
+    FRANKS = 530
+    GOTHS = 531
+    TEUTONS = 532
+    JAPANESE = 533
+    CHINESE = 534
+    BYZANTINES = 535
+    PERSIANS = 536
+    SARACENS = 537
+    TURKS = 538
+    VIKINGS = 539
+    MONGOLS = 540
+    CELTS = 541
+    SPANISH = 542
+    AZTECS = 543
+    MAYANS = 544
+    HUNS = 545
+    KOREANS = 546
+    ITALIANS = 547
+    INDIANS = 548
+    INCAS = 549
+    MAGYARS = 550
+    SLAVS = 551
+    ENABLE_SHEEP = 555
+    ENABLE_LLAMAS = 556
+    ENABLE_COWS = 557
+    ENABLE_TURKEYS = 558
+    ELITE_ORGAN_GUN = 563
+    ELITE_CAMEL_ARCHER = 565
+    ELITE_GBETO = 567
+    ELITE_SHOTEL_WARRIOR = 569
+    CARRACK = 572
+    ARQUEBUS = 573
+    ROYAL_HEIRS = 574
+    TORSION_ENGINES = 575
+    TIGUI = 576
+    KASBAH = 578
+    PORTUGUESE = 580
+    ETHIOPIANS = 581
+    MALIANS = 582
+    BERBERS = 583
+    ELITE_CARAVEL = 597
+    ELITE_GENITOUR = 599
+    FREE_CARTOGRAPHY = 600
+    ARSON = 602
+    ARROWSLITS = 608
+    ELITE_BALLISTA_ELEPHANT = 615
+    ELITE_KARAMBIT_WARRIOR = 617
+    ELITE_ARAMBAI = 619
+    THALASSOCRACY = 624
+    HOWDAH = 626
+    MANIPUR_CAVALRY = 627
+    CHATRAS = 628
+    ELITE_BATTLE_ELEPHANT = 631
+    KHMER = 650
+    MALAY = 651
+    BURMESE = 652
+    VIETNAMESE = 653
+    IMPERIAL_SKIRMISHER = 655
+    SET_MAXIMUM_POPULATION_NO_HOUSES = 658
+
+@enum_ordering
+class ObjectType(IntEnum):
+    LEGIONARY = 1
+    ARCHER = 4
+    HAND_CANNONEER = 5
+    ELITE_SKIRMISHER = 6
+    SKIRMISHER = 7
+    LONGBOWMAN = 8
+    ARROW = 9
+    ARCHERY_RANGE = 10
+    MANGUDAI = 11
+    BARRACKS = 12
+    FISHING_SHIP = 13
+    JUNK = 15
+    TRADE_COG = 17
+    BLACKSMITH = 18
+    WAR_GALLEY = 21
+    CROSSBOWMAN = 24
+    TEUTONIC_KNIGHT = 25
+    DEAD_CROSSBOWMAN = 26
+    MONASTERY = 30
+    FORTRESS = 33
+    BATTERING_RAM = 35
+    BOMBARD_CANNON = 36
+    LIGHT_CAVALRY = 37
+    KNIGHT = 38
+    CAVALRY_ARCHER = 39
+    CATAPHRACT = 40
+    HUSKARL = 41
+    TREBUCHET = 42
+    DOCK = 45
+    JANISSARY = 46
+    WILD_BOAR = 48
+    SIEGE_WORKSHOP = 49
+    FARM = 50
+    ROYAL_JANISSARY = 52
+    FISH_PERCH = 53
+    FISHERMAN = 56
+    FORAGE_BUSH = 59
+    DOLPHIN = 61
+    GATE = 63
+    DEER = 65
+    GOLD_MINE = 66
+    MILL = 68
+    SHORE_FISH = 69
+    HOUSE = 70
+    TOWN_CENTER = 71
+    PALISADE_WALL = 72
+    CHU_KO_NU = 73
+    MILITIA = 74
+    MAN_AT_ARMS = 75
+    HEAVY_SWORDSMAN = 76
+    LONG_SWORDSMAN = 77
+    WATCH_TOWER = 79
+    CASTLE = 82
+    VILLAGER = 83
+    MARKET = 84
+    STABLE = 86
+    DIRE_WOLF = 89
+    SPEARMAN = 93
+    BERSERK = 94
+    HAWK = 96
+    STONE_MINE = 102
+    ORGAN_GUN = 106
+    TRADE_CART = 108
+    TRADE_WORKSHOP = 110
+    DEAD_KNIGHT = 111
+    FLARE = 112
+    ELITE_ORGAN_GUN = 114
+    STONE_WALL = 117
+    BUILDER = 118
+    FORTIFIED_PALISADE_WALL = 119
+    FORAGER = 120
+    HUNTER = 122
+    LUMBERJACK = 123
+    STONE_MINER = 124
+    MONK = 125
+    WOLF = 126
+    RUBBLE_1_X_1 = 143
+    RUBBLE_2_X_2 = 144
+    RUBBLE_3_X_3 = 145
+    RUBBLE_4_X_4 = 146
+    RUBBLE_6_X_6 = 147
+    RUBBLE_8_X_8 = 148
+    FORTIFIED_WALL = 155
+    REPAIRER = 156
+    FOOD_WORKSHOP_CONVERTABLE = 157
+    RELIC_CART = 159
+    RICHARD_THE_LIONHEART = 160
+    THE_BLACK_PRINCE = 161
+    STUPA = 162
+    FRIAR_TUCK = 163
+    SHERIFF_OF_NOTTINGHAM = 164
+    CHARLEMAGNE = 165
+    ROLAND = 166
+    BELISARIUS = 167
+    THEODORIC_THE_GOTH = 168
+    AETHELFIRTH = 169
+    SIEGFRIED = 170
+    ERIK_THE_RED = 171
+    TAMERLANE = 172
+    KING_ARTHUR = 173
+    LANCELOT = 174
+    GAWAIN = 175
+    MORDRED = 176
+    ARCHBISHOP = 177
+    WOOD_WORKSHOP_CONVERTABLE = 178
+    DEAD_LONG_SWORDMAN = 180
+    GOLD_WORKSHOP_CONVERTABLE = 181
+    ELITE_CARAVEL = 183
+    CONDOTTIERO = 184
+    SLINGER = 185
+    FLAMETHROWER = 188
+    FIRE_TOWER = 190
+    VLAD_DRACULA = 193
+    FOOD_WORKSHOP = 194
+    KITABATAKE = 195
+    MINAMOTO = 196
+    ALEXANDER_NEVSKI = 197
+    EL_CID = 198
+    FISH_TRAP = 199
+    ROBIN_HOOD = 200
+    RABID_WOLF = 202
+    CAMEL_ARCHER = 203
+    VMDL = 206
+    IMPERIAL_CAMEL = 207
+    ELITE_CAMEL_ARCHER = 208
+    UNIVERSITY = 209
+    FARMER = 214
+    FALCON = 221
+    GENITOUR = 223
+    ELITE_GENITOUR = 230
+    AQUEDUCT = 231
+    WOAD_RAIDER = 232
+    GUARD_TOWER = 234
+    KEEP = 235
+    BOMBARD_TOWER = 236
+    WAR_ELEPHANT = 239
+    CRACKS = 241
+    OSMAN = 246
+    PILE_OF_STONE = 248
+    LONGBOAT = 250
+    AMPHITHEATRE = 251
+    PILE_OF_GOLD = 252
+    PILE_OF_WOOD = 253
+    GBETO = 260
+    PILE_OF_FOOD = 262
+    COLOSSEUM = 263
+    HARBOR = 264
+    CENTURION = 275
+    WONDER = 276
+    DEAD_FISH_TRAP = 278
+    SCORPION = 279
+    MANGONEL = 280
+    THROWING_AXEMAN = 281
+    MAMELUKE = 282
+    CAVALIER = 283
+    TREE_TD = 284
+    RELIC = 285
+    MONK_WITH_RELIC = 286
+    BRITISH_RELIC = 287
+    BYZANTINE_RELIC = 288
+    CHINESE_RELIC = 289
+    FRANKISH_RELIC = 290
+    SAMURAI = 291
+    GOTHIC_RELIC = 292
+    JAPANESE_RELIC = 294
+    PERSIAN_RELIC = 295
+    SARACEN_RELIC = 296
+    TEUTONIC_RELIC = 297
+    TURKISH_RELIC = 298
+    BANDIT = 299
+    GRASS_PATCH = 301
+    BUSH = 302
+    SEAGULLS = 303
+    BONFIRE = 304
+    LLAMA = 305
+    BLACK_TILE = 306
+    CUAUHTEMOC = 307
+    MONK_WITH_TURKISH_RELIC = 309
+    MOUNTAIN_1 = 310
+    MOUNTAIN_2 = 311
+    CAMEL = 329
+    HEAVY_CAMEL = 330
+    TREBUCHET_PACKED = 331
+    FLOWERS_1 = 334
+    FLOWERS_2 = 335
+    FLOWERS_3 = 336
+    FLOWERS_4 = 337
+    PATH_4 = 338
+    PATH_1 = 339
+    PATH_2 = 340
+    PATH_3 = 341
+    RUINS = 345
+    BAMBOO_FOREST_TREE = 348
+    OAK_FOREST_TREE = 349
+    PINE_FOREST_TREE = 350
+    PALM_FOREST_TREE = 351
+    ARMY_TENT = 352
+    DEAD_FARM = 357
+    PIKEMAN = 358
+    HALBERDIER = 359
+    NORDIC_SWORDSMAN = 361
+    STONE_WORKSHOP_CONVERTABLE = 362
+    CITY_WALL = 370
+    SEA_ROCKS_1 = 389
+    PAGODA = 390
+    SEA_ROCKS_2 = 396
+    SANCHI_STUPA = 397
+    GOL_GUMBAZ = 398
+    TREE_A = 399
+    TREE_B = 400
+    TREE_C = 401
+    TREE_D = 402
+    TREE_E = 403
+    TREE_F = 404
+    TREE_G = 405
+    TREE_H = 406
+    TREE_I = 407
+    TREE_J = 408
+    TREE_K = 409
+    TREE_L = 410
+    FOREST_TREE = 411
+    ELEPHANT = 412
+    SNOW_PINE_TREE = 413
+    JUNGLE_TREE = 414
+    STUMP = 415
+    ELITE_GBETO = 418
+    CANNON_GALLEON = 420
+    CAPPED_RAM = 422
+    CHARLES_MARTEL = 424
+    FRANCISCO_DE_ORELLANA = 425
+    HARALD_HARDRAADE = 426
+    GONZALO_PIZARRO = 427
+    HROLF_THE_GANGER = 428
+    FREDERICK_BARBAROSSA = 429
+    JOAN_THE_MAID = 430
+    WILLIAM_WALLACE = 432
+    KING = 434
+    PRITHVIRAJ = 437
+    FRANCESCO_SFORZA = 439
+    PETARD = 440
+    HUSSAR = 441
+    GALLEON = 442
+    POENARI_CASTLE = 445
+    PORT = 446
+    SCOUT_CAVALRY = 448
+    GREAT_FISH_MARLIN = 450
+    SHOTEL_WARRIOR = 453
+    FISH_DORADO = 455
+    FISH_SALMON = 456
+    FISH_TUNA = 457
+    FISH_SNAPPER = 458
+    ELITE_SHOTEL_WARRIOR = 459
+    FIRE_SHIP = 467
+    LOOT = 472
+    TWO_HANDED_SWORDSMAN = 473
+    HEAVY_CAVALRY_ARCHER = 474
+    BEAR = 486
+    ARBALEST = 492
+    ADVANCED_HEAVY_CROSSBOWMAN = 493
+    SIEGE_TOWER = 494
+    TORCH = 499
+    DEAD_PIKEMAN = 501
+    DEMOLITION_RAFT = 527
+    HEAVY_DEMOLITION_SHIP = 528
+    FIRE_GALLEY = 529
+    ELITE_LONGBOWMAN = 530
+    ELITE_THROWING_AXEMAN = 531
+    FAST_FIRE_SHIP = 532
+    ELITE_LONGBOAT = 533
+    ELITE_WOAD_RAIDER = 534
+    GALLEY = 539
+    HEAVY_SCORPION = 542
+    TRANSPORT_SHIP = 545
+    DEAD_LIGHT_CAVALRY = 547
+    SIEGE_RAM = 548
+    ONAGER = 550
+    ELITE_CATAPHRACT = 553
+    ELITE_TEUTONIC_KNIGHT = 554
+    ELITE_HUSKARL = 555
+    ELITE_MAMELUKE = 556
+    ELITE_JANISSARY = 557
+    ELITE_WAR_ELEPHANT = 558
+    ELITE_CHU_KO_NU = 559
+    ELITE_SAMURAI = 560
+    ELITE_MANGUDAI = 561
+    LUMBER_CAMP = 562
+    CHAMPION = 567
+    PALADIN = 569
+    GOLD_MINER = 579
+    MINING_CAMP = 584
+    SIEGE_ONAGER = 588
+    SHEPHERD = 590
+    SHEEP = 594
+    OUTPOST = 598
+    CATHEDRAL = 599
+    FLAG_A = 600
+    FLAG_B = 601
+    FLAG_C = 602
+    FLAG_D = 603
+    FLAG_E = 604
+    BRIDGE_A_TOP = 605
+    BRIDGE_A_MIDDLE = 606
+    BRIDGE_A_BOTTOM = 607
+    BRIDGE_B_TOP = 608
+    BRIDGE_B_MIDDLE = 609
+    BRIDGE_B_BOTTOM = 610
+    ROCK_1 = 623
+    PAVILION = 624
+    JOAN_OF_ARC = 629
+    FRANKISH_PALADIN = 632
+    SIEUR_DE_METZ = 634
+    SIEUR_BERTRAND = 636
+    TEMPLE_OF_HEAVEN = 637
+    DUKE_DALENASON = 638
+    PENGUIN = 639
+    LA_HIRE = 640
+    LORD_DE_GRAVILLE = 642
+    JEAN_DE_LORRAIN = 644
+    CONSTABLE_RICHEMONT = 646
+    GUY_JOSSELYNE = 648
+    JEAN_BUREAU = 650
+    SIR_JOHN_FASTOLF = 652
+    DEMOLITION_SHIP = 653
+    MOSQUE = 655
+    REYNALD_DE_CHATILLON = 678
+    MASTER_OF_THE_TEMPLAR = 680
+    BAD_NEIGHBOR = 682
+    GODS_OWN_SLING = 683
+    THE_ACCURSED_TOWER = 684
+    THE_TOWER_OF_FLIES = 685
+    ARCHERS_OF_THE_EYES = 686
+    PIECE_OF_THE_TRUE_CROSS = 688
+    PYRAMID = 689
+    DOME_OF_THE_ROCK = 690
+    ELITE_CANNON_GALLEON = 691
+    ELITE_BERSERK = 694
+    GREAT_PYRAMID = 696
+    SUBOTAI = 698
+    HUNTING_WOLF = 700
+    KUSHLUK = 702
+    SHAH = 704
+    COW = 705
+    SABOTEUR = 706
+    ORNLU_THE_WOLF = 707
+    CACTUS = 709
+    SKELETON = 710
+    RUGS = 711
+    YURT = 712
+    NINE_BANDS = 720
+    SHIPWRECK = 721
+    CRATER = 723
+    JAGUAR_WARRIOR = 725
+    ELITE_JAGUAR_WARRIOR = 726
+    ICE = 728
+    GODS_OWN_SLING_PACKED = 729
+    BAD_NEIGHBOR_PACKED = 730
+    GENGHIS_KHAN = 731
+    EMPEROR_IN_A_BARREL = 733
+    FEITORIA = 734
+    BAMBOO_STUMP = 737
+    BRIDGE_A_CRACKED = 738
+    BRIDGE_A_BROKEN_TOP = 739
+    BRIDGE_A_BROKEN_BOTTOM = 740
+    BRIDGE_B_CRACKED = 741
+    BRIDGE_B_BROKEN_TOP = 742
+    BRIDGE_B_BROKEN_BOTTOM = 743
+    MOUNTAIN_3 = 744
+    MOUNTAIN_4 = 745
+    COBRA_CAR = 748
+    EAGLE_SCOUT = 751
+    ELITE_EAGLE_WARRIOR = 752
+    EAGLE_WARRIOR = 753
+    TARKAN = 755
+    ELITE_TARKAN = 757
+    BURNED_BUILDING = 758
+    BALLISTA_ELEPHANT = 760
+    IMPERIAL_SKIRMISHER = 762
+    PLUMED_ARCHER = 763
+    ELITE_PLUMED_ARCHER = 765
+    ELITE_BATTLE_ELEPHANT = 766
+    CONQUISTADOR = 771
+    ELITE_CONQUISTADOR = 773
+    BATTLE_ELEPHANT = 774
+    MISSIONARY = 775
+    ATTILA_THE_HUN = 777
+    CANOE = 778
+    BLEDA_THE_HUN = 779
+    POPE_LEO_I = 781
+    ELITE_RATTAN_ARCHER = 782
+    SCYTHIAN_WILD_WOMAN = 783
+    RATTAN_ARCHER = 784
+    SEA_TOWER = 785
+    SEA_WALL = 788
+    PALISADE_GATE = 789
+    IRON_BOAR = 810
+    ELITE_ARAMBAI = 811
+    JAGUAR = 812
+    HORSE = 814
+    MACAW = 816
+    STATUE = 817
+    PLANT = 818
+    SIGN = 819
+    GRAVE = 820
+    HEAD = 821
+    JAVELINA = 822
+    ARAMBAI = 823
+    EL_CID_CAMPEADOR = 824
+    AMAZON_WARRIOR = 825
+    MONUMENT = 826
+    WAR_WAGON = 827
+    ELITE_WAR_WAGON = 829
+    ELITE_KARAMBIT_WARRIOR = 830
+    TURTLE_SHIP = 831
+    ELITE_TURTLE_SHIP = 832
+    TURKEY = 833
+    WILD_HORSE = 835
+    KARAMBIT_WARRIOR = 836
+    MAP_REVEALER = 837
+    KING_SANCHO = 838
+    ROCK_STONE = 839
+    KING_ALFONSO = 840
+    ROCK_GOLD = 841
+    IMAM = 842
+    ADMIRAL_YI_SUN_SHIN = 844
+    NOBUNAGA = 845
+    DONKEY = 846
+    HENRY_V = 847
+    WILLIAM_THE_CONQUEROR = 849
+    AMAZON_ARCHER = 850
+    ES_FLAG = 851
+    SCYTHIAN_SCOUT = 852
+    TORCH_CONVERTING = 853
+    OLD_STONE_HEAD = 855
+    ROMAN_RUINS = 856
+    HAY_STACK = 857
+    BROKEN_CART = 858
+    FLOWER_BED = 859
+    FURIOUS_THE_MONKEY_BOY = 860
+    CARAVEL = 861
+    STORMY_DOG = 862
+    GENOESE_CROSSBOWMAN = 866
+    ELITE_GENOESE_CROSSBOWMAN = 868
+    MAGYAR_HUSZAR = 869
+    ELITE_MAGYAR_HUSZAR = 871
+    QUIMPER_CATHEDRAL = 872
+    ELEPHANT_ARCHER = 873
+    ELITE_ELEPHANT_ARCHER = 875
+    BOYAR = 876
+    ELITE_BOYAR = 878
+    KAMAYUK = 879
+    ELITE_KAMAYUK = 881
+    WILD_CAMEL = 884
+    ELITE_BALLISTA_ELEPHANT = 891
+    HEAVY_PIKEMAN = 892
+    EASTERN_SWORDSMAN = 894
+    WATERFALL = 896
+    CAMEL_GAIA = 897
+    ARCH_OF_CONSTANTINE = 899
+    RAIN = 900
+    FLAG_F = 901
+    SMOKE = 902
+    WOODEN_BRIDGE_A_TOP = 904
+    WOODEN_BRIDGE_A_MIDDLE = 905
+    WOODEN_BRIDGE_A_BOTTOM = 906
+    WOODEN_BRIDGE_B_TOP = 907
+    WOODEN_BRIDGE_B_MIDDLE = 908
+    WOODEN_BRIDGE_B_BOTTOM = 909
+    IMPALED_CORPSE = 910
+    QUARRY = 914
+    LUMBER = 915
+    GOODS = 916
+    VULTURE = 917
+    ROCK_2 = 918
+    QUEEN = 923
+    SANYOGITA = 925
+    PRITHVI = 926
+    CHAND_BHAI = 927
+    SALADIN = 929
+    KHOSRAU = 930
+    JARL = 931
+    SAVARAN = 932
+    BARRELS = 933
+    ALFRED_THE_ALPACA = 934
+    DRAGON_SHIP = 938
+    FLAME_1 = 939
+    FLAME_2 = 940
+    FLAME_3 = 941
+    FLAME_4 = 942
+    BUDDHA_STATUE_A = 1009
+    ZEBRA = 1019
+    PRIEST = 1023
+    OSTRICH = 1026
+    STORK = 1028
+    LION = 1029
+    CROCODILE = 1031
+    SAVANNAH_GRASS_PATCH = 1033
+    MUSA_IBN_NUSAYR = 1034
+    SUNDJATA = 1035
+    TARIQ_IBN_ZIYAD = 1036
+    RICHARD_DE_CLARE = 1037
+    TRISTAN = 1038
+    PRINCESS_YODIT = 1039
+    HENRY_II = 1040
+    MOUNTAIN_5 = 1041
+    MOUNTAIN_6 = 1042
+    MOUNTAIN_7 = 1043
+    MOUNTAIN_8 = 1044
+    SNOW_MOUNTAIN_1 = 1045
+    SNOW_MOUNTAIN_2 = 1046
+    SNOW_MOUNTAIN_3 = 1047
+    ROCK_FORMATION_1 = 1048
+    ROCK_FORMATION_2 = 1049
+    ROCK_FORMATION_3 = 1050
+    DRAGON_TREE = 1051
+    BAOBAB_TREE = 1052
+    BUSH_2 = 1053
+    BUSH_3 = 1054
+    FRUIT_BUSH = 1059
+    GOAT = 1060
+    FENCE = 1062
+    ACACIA_TREE = 1063
+    YEKUNO_AMLAK = 1064
+    YODIT = 1066
+    ITZCOATL = 1067
+    MUSTAFA_PASHA = 1068
+    PACAL_II = 1069
+    BABUR = 1070
+    ABRAHA_ELEPHANT = 1071
+    GUGLIELMO_EMBRIACO = 1072
+    SU_DINGFANG = 1073
+    PACHACUTI = 1074
+    HUAYNA_CAPAC = 1075
+    MIKLOS_TOLDI = 1076
+    LITTLE_JOHN = 1077
+    ZAWISZA_THE_BLACK = 1078
+    SUMANGURU = 1080
+    STORAGE = 1081
+    HUT = 1082
+    GRANARY = 1089
+    BARRICADE = 1090
+    ANIMAL_SKELETON = 1091
+    STELAE_A = 1092
+    STELAE_B = 1093
+    STELAE_C = 1094
+    GALLOW = 1095
+    PALACE = 1096
+    TENT = 1097
+    SEA_FORTIFICATION = 1102
+    DAGNAJAN = 1106
+    GIDAJAN = 1109
+    KOMODO_DRAGON = 1135
+    TIGER = 1137
+    RHINOCEROS = 1139
+    BOX_TURTLES = 1141
+    WATER_BUFFALO = 1142
+    MANGROVE_TREE = 1144
+    RAINFOREST_TREE = 1146
+    ROCK_BEACH = 1148
+    ROCK_JUNGLE = 1149
+    FLAG_G = 1150
+    FLAG_H = 1151
+    FLAG_I = 1152
+    FLAG_J = 1153
+    GAJAH_MADA = 1157
+    JAYANEGARA = 1158
+    RADEN_WIJAYA = 1159
+    SUNDA_ROYAL_FIGHTER = 1160
+    SURYAVARMAN_I = 1162
+    UDAYADITYAVARMAN_I = 1163
+    JAYAVIRAVARMAN = 1164
+    BAYINNAUNG = 1165
+    TABINSHWEHTI = 1166
+    BUDDHA_STATUE_B = 1172
+    BUDDHA_STATUE_C = 1173
+    BUDDHA_STATUE_D = 1174
+    FERN_PATCH = 1175
+    TROWULAN_GATE = 1176
+    VASES = 1177
+    LE_LOI = 1178
+    LE_LAI = 1179
+    LE_TRIEN = 1181
+    LUU_NHAN_CHU = 1182
+    BUI_BI = 1183
+    DINH_LE = 1184
+    WANG_TONG = 1185
+    ENVOY = 1186
+    RICE_FARM = 1187
+    DEAD_RICE_FARM = 1188
+    BRIDGE_C_TOP = 1204
+    BRIDGE_C_MIDDLE = 1205
+    BRIDGE_C_BOTTOM = 1206
+    BRIDGE_D_TOP = 1207
+    BRIDGE_D_MIDDLE = 1208
+    BRIDGE_D_BOTTOM = 1209
+    BRIDGE_C_CRACKED = 1210
+    BRIDGE_C_BROKEN_TOP = 1211
+    BRIDGE_C_BROKEN_BOTTOM = 1212
+    BRIDGE_D_CRACKED = 1213
+    BRIDGE_D_BROKEN_TOP = 1214
+    BRIDGE_D_BROKEN_BOTTOM = 1215
+    SHARKATZOR = 1222
+    WOOD_WORKSHOP = 1305
+    STONE_WORKSHOP = 1306
+    GOLD_WORKSHOP = 1307
+    RESOURCE_WORKSHOP_CONVERTABLE = 1308
+
+
+def _object_type_index(object_type: ObjectType) -> int:
+    return ObjectType.__members_position__[object_type]
+
+def _tech_type_index(tech_type: TechType) -> int:
+    return TechType.__members_position__[tech_type]
+
+def can_research(obs, tech_type: TechType) -> int:
+    index = _tech_type_index(tech_type)
+    return obs['can_research'][index]
+
+def can_build(obs, building_type: ObjectType) -> int:
+    index = _object_type_index(building_type)
+    return obs['can_build'][index]
+
+def can_train(obs, unit_type: ObjectType) -> int:
+    index = _object_type_index(unit_type)
+    return obs['can_train'][index]
+
+def count_buildings(obs, building_type: ObjectType) -> int:
+    index = _object_type_index(building_type)
+    return obs['object_count'][index]
+
+def count_units(obs, unit_type: ObjectType) -> int:
+    index = _object_type_index(unit_type)
+    return obs['object_count'][index]
+
+def dropsite_min_distance(obs, resource_index: Resource):
+    return obs['dropsite_min_distance'][resource_index.value]
+
+def resource_found(obs, resource_index: Resource):
+    return obs['resource_found'][resource_index.value]
+
+# def unit_data(id: int):
+#     yield fact.UpSetTargetById(inConstId=id)
+#     yield fact.UpGetObjectData(inConstObjectData=ObjectData.POINT_X, outGoalData=100)
+#     yield fact.UpGetObjectData(inConstObjectData=ObjectData.POINT_Y, outGoalData=101)
+#     yield fact.UpPointExplored(inGoalPoint=100)
+#     yield fact.UpObjectDataList()
