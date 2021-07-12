@@ -28,6 +28,9 @@ DEFAULT_AUTOGAME = 'hooks\\aoc-auto-game.dll'
 DEFAULT_AIMODULE = 'hooks\\aimodule-aoc.dll'
 DEFAULT_AUTOGAME_PORT = 64720
 DEFAULT_AIMODULE_PORT = 37412
+# this is a hack to avoid problems with Game struct
+# initialization in the game process
+DEFAULT_AIMODULE_LOAD_DELAY_SECONDS = 2
 
 MAX_SLOTS = 8
 
@@ -42,6 +45,7 @@ class RunConfig:
     aimodule_dll: str
     autogame_port: int
     aimodule_port: int
+    aimodule_load_delay: int
     host: str = "127.0.0.1"
 
     @classmethod
@@ -49,7 +53,8 @@ class RunConfig:
                *,
                exec_path: Optional[str] = None,
                autogame_dll: Optional[str] = None,
-               aimodule_dll: Optional[str] = None) -> 'RunConfig':
+               aimodule_dll: Optional[str] = None,
+               aimodule_load_delay: int = DEFAULT_AIMODULE_LOAD_DELAY_SECONDS) -> 'RunConfig':
         # exec path resolution order:
         # * explicit param from the launcher script
         # * PYAGE2PATH env variable
@@ -84,6 +89,7 @@ class RunConfig:
             autogame_port=DEFAULT_AUTOGAME_PORT, # xxx(okachaiev): is it possible to use a free one?
             aimodule_dll=os.path.expanduser(aimodule_dll),
             aimodule_port=DEFAULT_AIMODULE_PORT, # xxx(okachaiev): find free port if necessary
+            aimodule_load_delay=aimodule_load_delay,
         )
 
 class PlayerType(Enum):

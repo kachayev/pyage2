@@ -30,10 +30,6 @@ from pyage2.lib import actions
 import pyage2.expert.fact.fact_pb2 as fact
 import pyage2.expert.action.action_pb2 as action
 
-# this is a hack to avoid problems with Game struct
-# initialization in the game process
-AIMODULE_LOAD_DELAY_SECONDS = 2
-
 class Age2LaunchError(Exception):
     pass
 
@@ -57,6 +53,7 @@ class Age2Env(BaseEnv):
         self._num_agents = len(game_config.players)
 
         self._proc = None
+        self._injector = None
         self._autogame_client = None
         self._expert_client = None
 
@@ -64,11 +61,10 @@ class Age2Env(BaseEnv):
         self._launch_process(self._run_config)
 
         # inject DLL for running game programmatically
-        self._init_autogame(self._proc.pid, self._run_config)
+        self._init_autogame(self._run_config)
 
         # inject DLL to interact with expert facts and actions
-        time.sleep(AIMODULE_LOAD_DELAY_SECONDS)
-        self._init_expert_api(self._proc.pid, self._run_config)
+        self._init_expert_api(self._run_config)
 
         # create game based on the configuration given
         self._run_game(self._game_config)
@@ -90,26 +86,26 @@ class Age2Env(BaseEnv):
             # properly if the process was killed externally
             # curious if there's an API to just provide on_close callback or something
             self._proc = subprocess.Popen(run_config.exec_path)
+            # xxx(okachaiev): i should just have a "remote process" abstraction
+            # with Popen, on_close callback, and DLL injector (all together)
+            # in this case it should be much easier to reimplement for other platforms
+            self._injector = LibraryInjector(self._proc.pid)
             logging.debug(f"Game process PID: %s", self._proc.pid)
         except OSError:
             logging.exception("Failed to launch game process.")
             raise Age2LaunchError(f"Failed to launch {run_config.exec_path}")
 
-    def _inject_dlls(self, pid: int, libraries: List[str]):
-        # xxx(okachaiev): i should just have a "remote process" abstraction
-        # with Popen, on_close callback, and DLL injector (all together)
-        # in this case it should be much easier to reimplement for other platforms
-        with LibraryInjector(pid) as injector:
-            for dll_path in libraries:
-                injector.load_library(dll_path)
-
-    def _init_autogame(self, pid: int, run_config: RunConfig):
-        self._inject_dlls(pid, [run_config.autogame_dll])
+    def _init_autogame(self, run_config: RunConfig):
+        assert self._injector
+        self._injector.load_library(run_config.autogame_dll)
         logging.debug("Connecting to autogame Msgpack RPC on %s:%s", run_config.host, run_config.autogame_port)
         self._autogame_client = msgpackrpc.Client(msgpackrpc.Address(run_config.host, run_config.autogame_port), timeout=30, reconnect_limit=30)
 
-    def _init_expert_api(self, pid: int, run_config: RunConfig):
-        self._inject_dlls(pid, [run_config.aimodule_dll])
+    def _init_expert_api(self, run_config: RunConfig):
+        assert self._injector
+        if run_config.aimodule_load_delay > 0:
+            time.sleep(run_config.aimodule_load_delay)
+        self._injector.load_library(run_config.aimodule_dll)
         logging.debug("Connecting to aimodule gRPC on %s:%s", run_config.host, run_config.aimodule_port)
         self._expert_client = ExpertClient(run_config.host, run_config.aimodule_port)
 
@@ -386,6 +382,10 @@ class Age2Env(BaseEnv):
         """Frees up any resources associated with the environment (e.g. external
         processes). The method could be used directly or via a context manager.
         """
+        if self._injector is not None:
+            self._injector.close()
+            self._injector = None
+
         if self._autogame_client is not None:
             self._autogame_client.close()
             self._autogame_client = None
