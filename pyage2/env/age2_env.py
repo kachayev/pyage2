@@ -24,11 +24,11 @@ from pyage2.env.core import BaseEnv
 from pyage2.lib import LibraryInjector
 from pyage2.lib.bot import DEFAULT_NOOP_BOT_NAME
 from pyage2.lib.configs import GameConfig, PlayerCivilization, PlayerType, RunConfig
-from pyage2.lib.expert import ExpertAPIError, ExpertClient, ObjectType, Resource, TechType
+from pyage2.lib.expert import ExpertAPIError, ExpertClient, MapTiles, ObjectType, Resource, TechType
 from pyage2.lib import actions
 
-import pyage2.expert.fact.fact_pb2 as fact
 import pyage2.expert.action.action_pb2 as action
+import pyage2.expert.fact.fact_pb2 as fact
 
 class Age2LaunchError(Exception):
     pass
@@ -193,15 +193,30 @@ class Age2Env(BaseEnv):
 
         self._last_score = [0] * self._num_agents
         self._winning = [0] * self._num_agents
-        self._info = None
+        self._tiles = self.map_tiles
 
+        self._info = None
         self._observe_game()
 
         return self._observe_agents(), self._info
 
+    @property
+    def map_tiles(self):
+        """Fetches spartial information about the map. As the map does not change
+        throughout the game, should be called only once right after `reset`.
+        """
+        assert self._expert_client, "AI Module DLL client is not initialized."
+
+        try:
+            return self._expert_client.map_tiles()
+        except ExpertAPIError as e:
+            logging.exception("Expert API call failed.")
+            raise Age2ProcessError() from e
+
+
     def step(self, actions):
         """Apply actions, step the world forward, and return observations."""
-        assert self._autogame_client
+        assert self._autogame_client, "Autogame DLL client is not initialized."
 
         if self._state == Age2EnvState.START:
             self.reset()
@@ -325,6 +340,13 @@ class Age2Env(BaseEnv):
             for i, tech_id in enumerate(TechType)
         ]
 
+        # xxx(okachaiev): there are 2 options for how we can track pending research
+        # 1. keep track of requested researches and only update them
+        # 2. use `UpResearchStatus` fact for all tech ids
+        # the former yields much better performance but want be suitable for bots &
+        # replay files (as we don't have access to requests)
+        # maybe there's a way to find all pending researches using scripting API...
+
         all_facts = generic_facts + \
             resource_found_facts + \
             dropsite_min_distance_facts + \
@@ -337,8 +359,9 @@ class Age2Env(BaseEnv):
         expert_obs = self._expert_client.player_facts(player_id, all_facts)
 
         expert_obs.update({
-            "alive": self._autogame_client.call('GetPlayerAlive', player_id),
-            "winning": self._winning[player_id-1],
+            'alive': self._autogame_client.call('GetPlayerAlive', player_id),
+            'winning': self._winning[player_id-1],
+            'tiles': self._tiles,
         })
 
         return expert_obs
@@ -399,6 +422,7 @@ class Age2Env(BaseEnv):
             'can_research': (num_objects,),
             'can_train': (num_objects,),
             'can_build': (num_objects,),
+            'tiles': MapTiles,
         }
 
     def action_spec(self):

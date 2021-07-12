@@ -13,12 +13,15 @@
 # limitations under the License.
 """Client to communicate with AI Module gRPC server."""
 
+from dataclasses import dataclass
 from enum import Enum, IntEnum
 from google.protobuf.any_pb2 import Any
 import grpc
-from typing import Any as AnyType, List, Tuple
+from typing import Any as AnyType, List, Optional, Tuple
 
 from pyage2.lib.utils import enum_ordering
+
+import pyage2.expert.fact.fact_pb2 as fact
 import pyage2.protos.expert.expert_api_pb2_grpc as expert_grpc
 import pyage2.protos.expert.expert_api_pb2 as expert
 
@@ -26,6 +29,26 @@ Actions = List[AnyType]
 
 class ExpertAPIError(Exception):
     pass
+
+@dataclass
+class Tile:
+    x: int
+    y: int
+    height: Optional[int]
+    terrain: Optional[int]
+    visibility: int
+
+@dataclass
+class MapTiles:
+    width: int
+    height: int
+    tiles: List[Tile]
+
+    def __str__(self):
+        return f"MapTiles[w={self.width}, h={self.height}, tiles={len(self.tiles)}]"
+
+    def __repr__(self):
+        return str(self)
 
 def _unpack(result, result_type):
     unpacked_result = result_type()
@@ -52,6 +75,24 @@ class ExpertClient:
             return self._api.ExecuteCommandList(request)
         except grpc.RpcError as e:
             raise ExpertAPIError() from e
+
+    def map_tiles(self) -> MapTiles:
+        """Fetches information about map tiles.
+        
+        As the result type is signifintly different from other facts,
+        unpacking from grpc message into Python dataclass is done manually
+        withih the function."""
+        response = self(1, [fact.ModMapTiles()])
+        unpacked_response = fact.ModMapTilesResult()
+        response.results[0].Unpack(unpacked_response)
+        return MapTiles(
+            width=unpacked_response.mapWidth,
+            height=unpacked_response.mapHeight,
+            tiles=[
+                Tile(x=t.x, y=t.y, height=t.height, terrain=t.terrain, visibility=t.visibility)
+                for t in unpacked_response.tiles
+            ],
+        )
 
     def player_facts(self, player_id, commands):
         request = [cmd for _, cmd, _ in commands]
