@@ -31,6 +31,9 @@ DEFAULT_AIMODULE_PORT = 37412
 # this is a hack to avoid problems with Game struct
 # initialization in the game process
 DEFAULT_AIMODULE_LOAD_DELAY_SECONDS = 2
+DEFAULT_AUTOGAME_CONNECT_DELAY_SECONDS = 3
+DEFAULT_AUTOGAME_TIMEOUT_SECONDS = 2
+DEFAULT_AUTOGAME_RECONNECT_LIMIT = 30
 
 MAX_SLOTS = 8
 
@@ -45,7 +48,10 @@ class RunConfig:
     aimodule_dll: str
     autogame_port: int
     aimodule_port: int
-    aimodule_load_delay: int
+    autogame_connect_delay: int = DEFAULT_AUTOGAME_CONNECT_DELAY_SECONDS
+    autogame_timeout: int = DEFAULT_AUTOGAME_TIMEOUT_SECONDS
+    autogame_reconnect_limit: int = DEFAULT_AUTOGAME_RECONNECT_LIMIT
+    aimodule_load_delay: int = DEFAULT_AIMODULE_LOAD_DELAY_SECONDS
     host: str = "127.0.0.1"
 
     @classmethod
@@ -54,6 +60,9 @@ class RunConfig:
                exec_path: Optional[str] = None,
                autogame_dll: Optional[str] = None,
                aimodule_dll: Optional[str] = None,
+               autogame_connect_delay: int = DEFAULT_AUTOGAME_CONNECT_DELAY_SECONDS,
+               autogame_timeout: int = DEFAULT_AUTOGAME_TIMEOUT_SECONDS,
+               autogame_reconnect_limit: int = DEFAULT_AUTOGAME_RECONNECT_LIMIT,
                aimodule_load_delay: int = DEFAULT_AIMODULE_LOAD_DELAY_SECONDS) -> 'RunConfig':
         # exec path resolution order:
         # * explicit param from the launcher script
@@ -90,6 +99,9 @@ class RunConfig:
             aimodule_dll=os.path.expanduser(aimodule_dll),
             aimodule_port=DEFAULT_AIMODULE_PORT, # xxx(okachaiev): find free port if necessary
             aimodule_load_delay=aimodule_load_delay,
+            autogame_connect_delay=autogame_connect_delay,
+            autogame_timeout=autogame_timeout,
+            autogame_reconnect_limit=autogame_reconnect_limit,
         )
 
 class PlayerType(Enum):

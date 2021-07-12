@@ -13,4 +13,4 @@
 # limitations under the License.
 
 from .core import BaseEnv, Step, Agent
-from .age2_env import Age2Env
+from .age2_env import Age2Env, Age2LaunchError, Age2ProcessError

@@ -24,13 +24,16 @@ from pyage2.env.core import BaseEnv
 from pyage2.lib import LibraryInjector
 from pyage2.lib.bot import DEFAULT_NOOP_BOT_NAME
 from pyage2.lib.configs import GameConfig, PlayerCivilization, PlayerType, RunConfig
-from pyage2.lib.expert import ExpertClient, ObjectType, Resource, TechType
+from pyage2.lib.expert import ExpertAPIError, ExpertClient, ObjectType, Resource, TechType
 from pyage2.lib import actions
 
 import pyage2.expert.fact.fact_pb2 as fact
 import pyage2.expert.action.action_pb2 as action
 
 class Age2LaunchError(Exception):
+    pass
+
+class Age2ProcessError(Exception):
     pass
 
 class Age2EnvState(Enum):
@@ -81,6 +84,7 @@ class Age2Env(BaseEnv):
     def _launch_process(self, run_config: RunConfig):
         try:
             logging.debug(f"Launching game process %s", run_config.exec_path)
+
             # xxx(okachaiev): assume i also need to run a background thread
             # to poll from it periodically to make sure we can close env
             # properly if the process was killed externally
@@ -90,6 +94,7 @@ class Age2Env(BaseEnv):
             # with Popen, on_close callback, and DLL injector (all together)
             # in this case it should be much easier to reimplement for other platforms
             self._injector = LibraryInjector(self._proc.pid)
+
             logging.debug(f"Game process PID: %s", self._proc.pid)
         except OSError:
             logging.exception("Failed to launch game process.")
@@ -97,16 +102,29 @@ class Age2Env(BaseEnv):
 
     def _init_autogame(self, run_config: RunConfig):
         assert self._injector
+
         self._injector.load_library(run_config.autogame_dll)
+
         logging.debug("Connecting to autogame Msgpack RPC on %s:%s", run_config.host, run_config.autogame_port)
-        self._autogame_client = msgpackrpc.Client(msgpackrpc.Address(run_config.host, run_config.autogame_port), timeout=30, reconnect_limit=30)
+
+        if run_config.autogame_connect_delay > 0:
+            time.sleep(run_config.autogame_connect_delay)
+        address = msgpackrpc.Address(run_config.host, run_config.autogame_port)
+        self._autogame_client = msgpackrpc.Client(
+            address,
+            timeout=run_config.autogame_timeout,
+            reconnect_limit=run_config.autogame_reconnect_limit
+        )
 
     def _init_expert_api(self, run_config: RunConfig):
         assert self._injector
+
         if run_config.aimodule_load_delay > 0:
             time.sleep(run_config.aimodule_load_delay)
         self._injector.load_library(run_config.aimodule_dll)
+
         logging.debug("Connecting to aimodule gRPC on %s:%s", run_config.host, run_config.aimodule_port)
+
         self._expert_client = ExpertClient(run_config.host, run_config.aimodule_port)
 
     def _run_game(self, game_config: GameConfig):
@@ -188,20 +206,27 @@ class Age2Env(BaseEnv):
         if self._state == Age2EnvState.START:
             self.reset()
 
+        if not self.process_running:
+            raise Age2ProcessError("'Age of Empires II' process was terminated.")
+
         # xxx(okachaiev): this is not exactly true when dealing with real-time game :thinking:
         self._total_steps += 1
         self._episode_steps += 1
 
-        # issue actions into the game
-        self._expert_client.actions(actions)
-
-        # get observations from the game
-        self._observe_game()
+        try:
+            # issue actions into the game
+            self._expert_client.actions(actions)
+            # get observations from the game
+            self._observe_game()
+            agents_obs = self._observe_agents()
+        except ExpertAPIError as e:
+            logging.exception("Expert API call failed.")
+            raise Age2ProcessError() from e
 
         # observation, reward, done, info
         # xxx(okachaiev): i'm curious what's the best approach to let agent to
         # determine it's own reward and do we even need it here? :thinking:
-        return self._observe_agents(), 0, not self.running, self._info
+        return agents_obs, 0, not self.running, self._info
 
     @property
     def game_time(self):
@@ -217,6 +242,10 @@ class Age2Env(BaseEnv):
     @property
     def game_config(self):
         return self._game_config
+
+    @property
+    def process_running(self):
+        return self._proc is not None and self._proc.poll() is None 
 
     def _observe_agents(self):
         """Returns an array of observations for each agent."""
@@ -394,6 +423,6 @@ class Age2Env(BaseEnv):
             self._expert_client.close()
             self._expert_client = None
 
-        if self._proc and self._proc.poll() is None:
+        if self.process_running:
             self._proc.terminate()
             self._proc = None

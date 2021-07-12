@@ -24,6 +24,9 @@ import pyage2.protos.expert.expert_api_pb2 as expert
 
 Actions = List[AnyType]
 
+class ExpertAPIError(Exception):
+    pass
+
 def _unpack(result, result_type):
     unpacked_result = result_type()
     result.Unpack(unpacked_result)
@@ -45,10 +48,15 @@ class ExpertClient:
         for cmd in commands:
             any_command.Pack(cmd)
             request.commands.append(any_command)
-        return self._api.ExecuteCommandList(request)
+        try:
+            return self._api.ExecuteCommandList(request)
+        except grpc.RpcError as e:
+            raise ExpertAPIError() from e
 
     def player_facts(self, player_id, commands):
         request = [cmd for _, cmd, _ in commands]
+        # xxx(okachaiev): this one could be drastically simplified
+        # if we follow the convention (factType, factTypeResult)
         response_types = [(result_key, result_type) for result_key, _, result_type in commands]
         response = self(player_id, request)
         response_keys = {}

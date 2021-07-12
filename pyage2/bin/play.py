@@ -16,7 +16,7 @@
 import click
 import logging
 
-from pyage2.env import Age2Env, Step, Agent
+from pyage2.env import Age2Env, Age2ProcessError, Step, Agent
 from pyage2.lib import actions, bot
 from pyage2.lib.configs import *
 from pyage2.lib.cli import EnumChoice
@@ -119,10 +119,15 @@ def entry_point(**kwargs):
 				actions.append((agent.player_id, agent_actions))
 			# xxx(okachaiev): what would be the most flexible way
 			# to define reward? a callback? weights?
-			obs, reward, done, info = env.step(actions)
-			if info['episode_steps'] % 100 == 0:
-				print(obs)
-				print(info)
+			try:
+				obs, reward, done, info = env.step(actions)
+			except Age2ProcessError as e:
+				logging.error(str(e))
+				done = True
+			else:
+				if info['episode_steps'] % 100 == 0:
+					print(obs)
+					print(info)
 		logging.info("Game if finished.")
 		print(obs)
 		print(info)
