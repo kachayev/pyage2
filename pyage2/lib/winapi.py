@@ -133,7 +133,7 @@ class LibraryInjector:
         self._free_remote(args_addr, len(buffer))
         return dll_addr
 
-    def unload(self):
+    def close(self):
         if self._handle is not None:
             windll.kernel32.CloseHandle(self._handle)
             self._handle = None
@@ -165,7 +165,7 @@ class LibraryInjector:
         return self
     
     def __exit__(self, _exception_type, _exception_value, _exception_traceback):
-        self.unload()
+        self.close()
     
     def __del__(self):
-        self.unload()
+        self.close()
