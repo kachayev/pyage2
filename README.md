@@ -33,10 +33,11 @@ Built-in AI agents contains 10k+ rules. To get a high level understanding of how
 ```python
 class VillagersOnlyAgent(BaseAgent):
     """I bet you not gonna win with this..."""
+
     def step(self, obs):
         if obs.observation['civilian_population'] < 130 \
-                and expert.can_train(obs.observation, 'Villager'):
-            return actions.train('Villager')
+                and expert.can_train(obs.observation, ObjectType.VILLAGER):
+            return actions.train(ObjectType.VILLAGER)
 ```
 
 Check out `pyage2.agents.ScriptedAgent` as an example of a primitive but fully-functional agent.

@@ -58,7 +58,6 @@ class ScriptedAgent(BaseAgent):
             yield actions.set_strategic_number(StrategicNumber.GOLD_GATHERER_PERCENTAGE, 15)
             yield actions.set_strategic_number(StrategicNumber.STONE_GATHERER_PERCENTAGE, 5)
 
-    # xxx(okachaiev): need to deal with strategic numbers as well
     def _actions(self, obs):
 
         yield from self._set_strategic_numbers(obs)
